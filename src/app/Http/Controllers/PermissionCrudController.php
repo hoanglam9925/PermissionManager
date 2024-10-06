@@ -5,15 +5,11 @@ namespace Backpack\PermissionManager\app\Http\Controllers;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
 use Backpack\PermissionManager\app\Http\Requests\PermissionStoreCrudRequest as StoreRequest;
 use Backpack\PermissionManager\app\Http\Requests\PermissionUpdateCrudRequest as UpdateRequest;
-use Spatie\Permission\PermissionRegistrar;
 
 // VALIDATION
 
 class PermissionCrudController extends CrudController
 {
-    protected string $role_model;
-    protected string $permission_model;
-
     use \Backpack\CRUD\app\Http\Controllers\Operations\ListOperation;
     use \Backpack\CRUD\app\Http\Controllers\Operations\CreateOperation;
     use \Backpack\CRUD\app\Http\Controllers\Operations\UpdateOperation;
@@ -43,16 +39,16 @@ class PermissionCrudController extends CrudController
     public function setupListOperation()
     {
         $this->crud->addColumn([
-            'name'  => 'name',
+            'name' => 'display_name',
             'label' => trans('backpack::permissionmanager.name'),
-            'type'  => 'text',
+            'type' => 'text',
         ]);
 
         if (config('backpack.permissionmanager.multiple_guards')) {
             $this->crud->addColumn([
-                'name'  => 'guard_name',
+                'name' => 'guard_name',
                 'label' => trans('backpack::permissionmanager.guard_type'),
-                'type'  => 'text',
+                'type' => 'text',
             ]);
         }
     }
@@ -63,7 +59,7 @@ class PermissionCrudController extends CrudController
         $this->crud->setValidation(StoreRequest::class);
 
         //otherwise, changes won't have effect
-        app()->make(PermissionRegistrar::class)->forgetCachedPermissions();
+        \Cache::forget('spatie.permission.cache');
     }
 
     public function setupUpdateOperation()
@@ -72,22 +68,22 @@ class PermissionCrudController extends CrudController
         $this->crud->setValidation(UpdateRequest::class);
 
         //otherwise, changes won't have effect
-        app()->make(PermissionRegistrar::class)->forgetCachedPermissions();
+        \Cache::forget('spatie.permission.cache');
     }
 
     private function addFields()
     {
         $this->crud->addField([
-            'name'  => 'name',
+            'name' => 'name',
             'label' => trans('backpack::permissionmanager.name'),
-            'type'  => 'text',
+            'type' => 'text',
         ]);
 
         if (config('backpack.permissionmanager.multiple_guards')) {
             $this->crud->addField([
-                'name'    => 'guard_name',
-                'label'   => trans('backpack::permissionmanager.guard_type'),
-                'type'    => 'select_from_array',
+                'name' => 'guard_name',
+                'label' => trans('backpack::permissionmanager.guard_type'),
+                'type' => 'select_from_array',
                 'options' => $this->getGuardTypes(),
             ]);
         }

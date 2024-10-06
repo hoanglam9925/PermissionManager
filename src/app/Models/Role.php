@@ -10,4 +10,9 @@ class Role extends OriginalRole
     use CrudTrait;
 
     protected $fillable = ['name', 'guard_name', 'updated_at', 'created_at'];
+
+    public function getLevelAttribute($value)
+    {
+        return $this->id;
+    }
 }

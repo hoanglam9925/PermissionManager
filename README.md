@@ -2,10 +2,12 @@
 
 [![Latest Version on Packagist][ico-version]](link-packagist)
 [![Software License][ico-license]](LICENSE.md)
+[![Build Status][ico-travis]][link-travis]
+[![Quality Score][ico-code-quality]][link-code-quality]
 [![Style CI](https://styleci.io/repos/58740020/shield)](https://styleci.io/repos/58740020)
 [![Total Downloads][ico-downloads]][link-downloads]
 
-Admin interface for [spatie/laravel-permission](https://github.com/spatie/laravel-permission). It allows admins to easily add/edit/remove users, roles and permissions, using [Laravel Backpack](https://laravelbackpack.com).
+Admin interface for [spatie/laravel-permission](https://github.com/spatie/laravel-permission). It allows admins to easily add/edit/remove users, roles and permissions, using [Laravel Backpack](https://laravelbackpack.com). 
 
 As opposed to some other packages:
 - a user can have multiple roles;
@@ -23,7 +25,7 @@ This package is just a user interface for [spatie/laravel-permission](https://gi
 
 ## Install
 
-0) This package assumes you've already installed [Backpack for Laravel](https://backpackforlaravel.com). If you haven't, please [install Backpack first](https://backpackforlaravel.com/docs/installation).
+0) This package assumes you've already installed [Backpack for Laravel](https://backpackforlaravel.com). If you haven't, please [install Backpack first](https://backpackforlaravel.com/docs/3.5/installation).
 
 1) In your terminal:
 
@@ -31,11 +33,11 @@ This package is just a user interface for [spatie/laravel-permission](https://gi
 composer require backpack/permissionmanager
 ```
 
-2) Finish all installation steps for [spatie/laravel-permission](https://github.com/spatie/laravel-permission#installation), which has been pulled as a dependency. Run its migrations. Publish its config files. Most likely it's:
+2) Finish all installation steps for [spatie/laravel-permission](https://github.com/spatie/laravel-permission#installation), which as been pulled as a dependency. Run its migrations. Publish its config files. Most likely it's:
 ```shell
-php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvider" --tag="permission-migrations"
+php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvider" --tag="migrations"
 php artisan migrate
-php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvider" --tag="permission-config"
+php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvider" --tag="config"
 // then, add the Spatie\Permission\Traits\HasRoles trait to your User model(s)
 ```
 
@@ -56,7 +58,7 @@ php artisan migrate
 
 use Backpack\CRUD\app\Models\Traits\CrudTrait; // <------------------------------- this one
 use Spatie\Permission\Traits\HasRoles;// <---------------------- and this one
-use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Foundation\Auth\User as Authenticatable; 
 
 class User extends Authenticatable
 {
@@ -68,15 +70,18 @@ class User extends Authenticatable
      */
 ```
 
-6) [Optional] Add a menu item for it in ```resources/views/vendor/backpack/ui/inc/menu_items.blade.php```:
+6) [Optional] Add a menu item for it in ```resources/views/vendor/backpack/base/inc/sidebar_content.blade.php``` or ```menu.blade.php```:
 
 ```html
-<x-backpack::menu-dropdown title="Add-ons" icon="la la-puzzle-piece">
-    <x-backpack::menu-dropdown-header title="Authentication" />
-    <x-backpack::menu-dropdown-item title="Users" icon="la la-user" :link="backpack_url('user')" />
-    <x-backpack::menu-dropdown-item title="Roles" icon="la la-group" :link="backpack_url('role')" />
-    <x-backpack::menu-dropdown-item title="Permissions" icon="la la-key" :link="backpack_url('permission')" />
-</x-backpack::menu-dropdown>
+<!-- Users, Roles, Permissions -->
+<li class="nav-item nav-dropdown">
+    <a class="nav-link nav-dropdown-toggle" href="#"><i class="nav-icon la la-users"></i> Authentication</a>
+    <ul class="nav-dropdown-items">
+        <li class="nav-item"><a class="nav-link" href="{{ backpack_url('user') }}"><i class="nav-icon la la-user"></i> <span>Users</span></a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ backpack_url('role') }}"><i class="nav-icon la la-id-badge"></i> <span>Roles</span></a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ backpack_url('permission') }}"><i class="nav-icon la la-key"></i> <span>Permissions</span></a></li>
+    </ul>
+</li>
 ```
 
 7) [Optional] If you want to use the ```@can``` handler inside Backpack routes, you can:
@@ -96,11 +101,11 @@ OR
 (7.B.) Add a middleware to all your Backpack routes by adding this to your ```config/backpack/base.php``` file:
 ```diff
     // The classes for the middleware to check if the visitor is an admin
-    // Can be a single class or an array of classes
+    // Can be a single class or an array of clases
     'middleware_class' => [
         App\Http\Middleware\CheckIfAdmin::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
-+       Backpack\CRUD\app\Http\Middleware\UseBackpackAuthGuardInsteadOfDefaultAuthGuard::class,
++       Backpack\Base\app\Http\Middleware\UseBackpackAuthGuardInsteadOfDefaultAuthGuard::class,
     ],
 ```
 
@@ -178,7 +183,7 @@ You can also determine if a user has all of a given list of roles:
 ``` bash
 backpack_user()->hasAllRoles(Role::all());
 ```
-The assignRole, hasRole, hasAnyRole, hasAllRoles and removeRole-functions can accept a string, an array, a Role-object or an \Illuminate\Support\Collection-object.
+The assignRole, hasRole, hasAnyRole, hasAllRoles and removeRole-functions can accept a string, a Role-object or an \Illuminate\Support\Collection-object.
 
 A permission can be given to a role:
 ``` bash
@@ -225,165 +230,8 @@ This package also adds Blade directives to verify whether the currently logged i
 @endhasallroles
 ```
 
-You can use Laravel's native @can directive to check if a user has a certain permission.
+You can use Laravels native @can directive to check if a user has a certain permission.
 
-## Use permissions in CRUD controllers
-
-CRUD controllers have methods to [dynamically allow or deny access](https://backpackforlaravel.com/docs/6.x/crud-api#access) to operations. The ```$this->crud->allowAccess()``` and ```$this->crud->denyAccess()``` methods control both:
-- the form's navigation buttons display like Add, Edit, Delete and
-- the security access guards, returning a 403 forbidden error when no permission.
-
-In most cases, you should use `access` and `permission` separately. But if you want to link them together, so a "permission" gives "access", here is how you can do that too. Reminder: permissions can be assigned to a user either directly or through a role.
-
-1) Define a ```CrudPermissionTrait```
-``` php
-namespace App\Traits;
-
-use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
-
-/**
- * CrudPermissionTrait: use Permissions to configure Backpack
- */
-trait CrudPermissionTrait
-{
-    // the operations defined for CRUD controller
-    public array $operations = ['list', 'show', 'create', 'update', 'delete'];
-
-
-    /**
-     * set CRUD access using spatie Permissions defined for logged in user
-     *
-     * @return void
-     */
-    public function setAccessUsingPermissions()
-    {
-        // default
-        $this->crud->denyAccess($this->operations);
-
-        // get context
-        $table = CRUD::getModel()->getTable();
-        $user = request()->user();
-
-        // double check if no authenticated user
-        if (!$user) {
-            return; // allow nothing
-        }
-
-        // enable operations depending on permission
-        foreach ([
-            // permission level => [crud operations]
-            'see' => ['list', 'show'], // e.g. permission 'users.see' allows to display users
-            'edit' => ['list', 'show', 'create', 'update', 'delete'], // e.g. 'users.edit' permission allows all operations
-        ] as $level => $operations) {
-            if ($user->can("$table.$level")) {
-                $this->crud->allowAccess($operations);
-            }
-        }
-    }
-}
-```
-
-2) Use the above ```CrudPermissionTrait``` trait in any ````CrudController````, ```UserCrudController``` in this example.
-
-```php
-namespace App\Http\Controllers\Admin;
-
-use Backpack\PermissionManager\app\Http\Controllers\UserCrudController as BackpackUserCrudController;
-
-class UserCrudController extends BackpackUserCrudController
-{
-    use \App\Traits\CrudPermissionTrait;
-
-    public function setup()
-    {
-        parent::setup();
-        $this->setAccessUsingPermissions();
-    }
-}
-```
-
-Now make sure the route uses the right controller:
-
-(3.A) by binding the package controller to your controller as explained in [Customize UserCrudController](https://github.com/Laravel-Backpack/PermissionManager#customize-usercrudcontroller)
-
-```php
-$this->app->bind(
-    \Backpack\PermissionManager\app\Http\Controllers\UserCrudController::class, // package controller
-    \App\Http\Controllers\Admin\UserCrudController::class // the controller using CrudPermissionTrait
-);
-```
-
-OR
-
-(3.B) by defining the routes in your own ```routes/backpack/permissionmanager.php``` file as explained in [Overwriting fuctionality](https://github.com/Laravel-Backpack/PermissionManager#overwriting-functionality)
-```php
-Route::group([
-    'namespace'  => 'App\Http\Controllers\Admin', // the new namespace
-    'prefix'     => config('backpack.base.route_prefix', 'admin'),
-    'middleware' => ['web', backpack_middleware()],
-], function () {
-    // the adapted controllers
-    Route::crud('user', 'UserCrudController');
-    // Route::crud('role', 'RoleCrudController');
-});
-Route::group([
-    'namespace'  => '\Backpack\PermissionManager\app\Http\Controllers', // the original namespace
-    'prefix'     => config('backpack.base.route_prefix', 'admin'),
-    'middleware' => ['web', backpack_middleware()],
-], function () {
-    // to original controllers
-    // not modified yet in this example
-    Route::crud('permission', 'PermissionCrudController');
-    Route::crud('role', 'RoleCrudController');
-});
-```
-
-
-You may wish to use a ```PermissionSeeder``` to automatically populate the ```permission``` table with permissions corresponding to your code. Here is an example:
-
-```php
-namespace Database\Seeders;
-
-use App\Models\User;
-use Illuminate\Database\Seeder;
-use Backpack\PermissionManager\app\Models\Permission;
-use Backpack\PermissionManager\app\Models\Role;
-
-class PermissionSeeder extends Seeder
-{
-    /**
-     * Run the database Permission seed.
-
-     * Permissions are fixed in code and are seeded here.
-     * use 'php artisan db:seed --class=PermissionSeeder --force' in production
-     *
-     * @return void
-     */
-    public function run()
-    {
-        // create permission for each combination of table.level
-        collect([ // tables
-            'users',
-            'roles',
-        ])
-            ->crossJoin([ // levels
-                'see',
-                'edit',
-            ])
-            ->each(
-                fn (array $item) => Permission::firstOrCreate([
-                    'name' => implode('.', $item),
-                ])
-                    ->save()
-            )
-            //
-        ;
-        User::first()
-            ->givePermissionTo(['users.edit']);
-    }
-}
-```
-Use ```php artisan db:seed --class=PermissionSeeder --force``` in production
 
 ## Upgrade from 3.x to 4.x
 
@@ -401,8 +249,8 @@ Please see [CHANGELOG](CHANGELOG.md) for more information what has changed recen
 
 ## Overwriting functionality
 
-If you need to modify how this works in a project:
-- create a ```routes/backpack/permissionmanager.php``` file; the package will see that, and load _your_ routes file, instead of the one in the package;
+If you need to modify how this works in a project: 
+- create a ```routes/backpack/permissionmanager.php``` file; the package will see that, and load _your_ routes file, instead of the one in the package; 
 - create controllers/models that extend the ones in the package, and use those in your new routes file;
 - modify anything you'd like in the new controllers/models;
 
